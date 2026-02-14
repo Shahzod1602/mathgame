@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    command: gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
+    restart: always
+    env_file: .env
+    volumes:
+      - db_data:/app/data
+    environment:
+      - DB_FILE=/app/data/math_game.db
+    ports:
+      - "127.0.0.1:5000:5000"
+
+  bot:
+    build: .
+    command: python math1.py
+    restart: always
+    env_file: .env
+    volumes:
+      - db_data:/app/data
+    environment:
+      - DB_FILE=/app/data/math_game.db
+    depends_on:
+      - web
+
+volumes:
+  db_data:

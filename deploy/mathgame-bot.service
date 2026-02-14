@@ -1,0 +1,16 @@
+[Unit]
+Description=Math Game Telegram Bot
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/mathgame
+Environment="PATH=/opt/mathgame/venv/bin"
+EnvironmentFile=/opt/mathgame/.env
+ExecStart=/opt/mathgame/venv/bin/python math1.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

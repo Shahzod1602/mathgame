@@ -1,2 +1,4 @@
 flask>=3.0
 python-telegram-bot[job_queue]>=20.0
+python-dotenv>=1.0
+gunicorn>=21.2

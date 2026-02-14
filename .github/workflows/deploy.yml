@@ -1,0 +1,33 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd /opt/mathgame
+
+            # First deploy: clone repo
+            if [ ! -d .git ]; then
+              cd /opt
+              git clone https://github.com/Shahzod1602/mathgame.git
+              cd mathgame
+            else
+              git pull origin main
+            fi
+
+            # Build and restart
+            docker compose up -d --build --remove-orphans
+
+            # Cleanup old images
+            docker image prune -f

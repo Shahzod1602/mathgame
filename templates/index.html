@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Math Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
+            background: var(--tg-theme-bg-color, linear-gradient(135deg, #0f0c29, #302b63, #24243e));
+            color: var(--tg-theme-text-color, #fff);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -36,22 +37,6 @@
         .screen { display: none; }
         .screen.active { display: block; }
 
-        /* ── Login ───────────────────────────── */
-        #login-screen { text-align: center; }
-        #login-screen input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #555;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            font-size: 1.1rem;
-            margin-bottom: 16px;
-            outline: none;
-            transition: border-color .2s;
-        }
-        #login-screen input:focus { border-color: #ffd200; }
-
         /* ── Buttons ─────────────────────────── */
         .btn {
             display: inline-block;
@@ -62,12 +47,18 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform .15s, box-shadow .15s;
-            color: #fff;
+            color: var(--tg-theme-button-text-color, #fff);
         }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.3); }
         .btn:active { transform: scale(.97); }
-        .btn-primary { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; }
-        .btn-secondary { background: rgba(255,255,255,0.12); }
+        .btn-primary {
+            background: var(--tg-theme-button-color, linear-gradient(135deg, #f7971e, #ffd200));
+            color: var(--tg-theme-button-text-color, #1a1a2e);
+        }
+        .btn-secondary {
+            background: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.12));
+            color: var(--tg-theme-text-color, #fff);
+        }
 
         /* ── Level Select ────────────────────── */
         #level-screen { text-align: center; }
@@ -79,10 +70,10 @@
         }
         .level-btn {
             padding: 18px 12px;
-            border: 2px solid rgba(255,255,255,0.15);
+            border: 2px solid var(--tg-theme-hint-color, rgba(255,255,255,0.15));
             border-radius: 14px;
-            background: rgba(255,255,255,0.06);
-            color: #fff;
+            background: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.06));
+            color: var(--tg-theme-text-color, #fff);
             font-size: .95rem;
             font-weight: 600;
             cursor: pointer;
@@ -116,7 +107,7 @@
         .timer-bar {
             width: 100%;
             height: 6px;
-            background: rgba(255,255,255,0.1);
+            background: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.1));
             border-radius: 3px;
             margin-bottom: 30px;
             overflow: hidden;
@@ -147,10 +138,10 @@
         }
         .choice-btn {
             padding: 16px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid var(--tg-theme-hint-color, rgba(255,255,255,0.2));
             border-radius: 12px;
-            background: rgba(255,255,255,0.06);
-            color: #fff;
+            background: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.06));
+            color: var(--tg-theme-text-color, #fff);
             font-size: 1.3rem;
             font-weight: 700;
             cursor: pointer;
@@ -209,23 +200,23 @@
         }
         .result-msg.correct-msg { color: #00c853; }
         .result-msg.wrong-msg { color: #ff1744; }
+
+        .welcome-msg {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            opacity: .8;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Math Game</h1>
 
-    <!-- LOGIN -->
-    <div id="login-screen" class="screen active">
-        <p style="margin-bottom:16px;opacity:.7">Enter your name to start</p>
-        <input id="username-input" type="text" placeholder="Your name" maxlength="20" autofocus>
-        <br>
-        <button class="btn btn-primary" onclick="enterGame()">Play</button>
-    </div>
-
-    <!-- LEVEL SELECT -->
-    <div id="level-screen" class="screen">
-        <p style="margin-bottom:16px;opacity:.7">Choose a level</p>
+    <!-- LEVEL SELECT (start screen) -->
+    <div id="level-screen" class="screen active">
+        <div class="welcome-msg" id="welcome-msg"></div>
+        <p style="margin-bottom:16px;opacity:.7;text-align:center">Choose a level</p>
         <div class="level-grid">
             <button class="level-btn" onclick="startGame('school_easy')">
                 School - Easy<span>+1 pt | 15s</span>
@@ -284,7 +275,22 @@
 </div>
 
 <script>
-    let username = "";
+    // ── Telegram WebApp ──────────────────────────────────────
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // Get initData for auth on every API call
+    const initData = tg.initData || "";
+
+    // Show user greeting
+    const tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if (tgUser) {
+        document.getElementById('welcome-msg').textContent =
+            'Welcome, ' + (tgUser.first_name || tgUser.username || 'Player') + '!';
+    }
+
+    // ── Game state ───────────────────────────────────────────
     let currentLevel = "";
     let currentScore = 0;
     let timerInterval = null;
@@ -298,18 +304,20 @@
         $(id).classList.add('active');
     }
 
-    function enterGame() {
-        const name = $('username-input').value.trim();
-        if (!name) { $('username-input').focus(); return; }
-        username = name;
-        currentScore = 0;
-        showScreen('level-screen');
+    // ── API helper (attaches initData) ───────────────────────
+    async function api(url, options = {}) {
+        const headers = options.headers || {};
+        headers['X-Telegram-Init-Data'] = initData;
+        if (options.body) {
+            headers['Content-Type'] = 'application/json';
+        }
+        return fetch(url, { ...options, headers });
     }
 
-    $('username-input').addEventListener('keydown', e => { if (e.key === 'Enter') enterGame(); });
-
+    // ── Game logic ───────────────────────────────────────────
     async function startGame(level) {
         currentLevel = level;
+        currentScore = 0;
         showScreen('game-screen');
         await loadQuestion();
     }
@@ -319,12 +327,17 @@
         $('result-msg').textContent = '';
         $('result-msg').className = 'result-msg';
 
-        const res = await fetch('/api/question', {
+        const res = await api('/api/question', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({level: currentLevel}),
+            body: JSON.stringify({ level: currentLevel }),
         });
         const data = await res.json();
+
+        if (data.error) {
+            alert(data.error);
+            showScreen('level-screen');
+            return;
+        }
 
         $('level-label').textContent = data.label;
         $('score-display').textContent = 'Score: ' + currentScore;
@@ -364,10 +377,9 @@
     async function handleTimeout() {
         document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
 
-        const res = await fetch('/api/answer', {
+        const res = await api('/api/answer', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({answer: null, username}),
+            body: JSON.stringify({ answer: null }),
         });
         const data = await res.json();
 
@@ -381,10 +393,9 @@
         clearInterval(timerInterval);
         document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
 
-        const res = await fetch('/api/answer', {
+        const res = await api('/api/answer', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({answer: chosen, username}),
+            body: JSON.stringify({ answer: chosen }),
         });
         const data = await res.json();
 
