@@ -26,8 +26,17 @@ jobs:
               git pull origin main
             fi
 
-            # Build and restart
+            # Build and restart containers
             docker compose up -d --build --remove-orphans
+
+            # Ensure shared network exists and containers are connected
+            docker network create shared-net 2>/dev/null || true
+            docker network connect shared-net shahzod-portfolio 2>/dev/null || true
+            docker network connect shared-net mathgame-web-1 2>/dev/null || true
+
+            # Update nginx config in portfolio container
+            docker cp /opt/mathgame/deploy/nginx-mathgame.conf shahzod-portfolio:/etc/nginx/conf.d/math.conf
+            docker exec shahzod-portfolio nginx -s reload
 
             # Cleanup old images
             docker image prune -f
