@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(sqlite3:*)",
+      "Bash(\"C:\\\\Users\\\\shaxz\\\\PycharmProjects\\\\mathgame\\\\.venv\\\\Scripts\\\\python.exe\" --version)",
+      "WebSearch",
+      "Bash(\"C:\\\\Users\\\\shaxz\\\\PycharmProjects\\\\mathgame\\\\.venv\\\\Scripts\\\\pip.exe\" install flask)",
+      "Bash(\"C:\\\\Users\\\\shaxz\\\\PycharmProjects\\\\mathgame\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\shaxz\\\\PycharmProjects\\\\mathgame\\\\app.py\")",
+      "Bash(del \"C:\\\\Users\\\\shaxz\\\\PycharmProjects\\\\mathgame\\\\math_game.db\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)"
+    ]
+  }
+}

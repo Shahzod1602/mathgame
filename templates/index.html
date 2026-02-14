@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 24px;
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ── Screens ─────────────────────────── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ── Login ───────────────────────────── */
+        #login-screen { text-align: center; }
+        #login-screen input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #555;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            outline: none;
+            transition: border-color .2s;
+        }
+        #login-screen input:focus { border-color: #ffd200; }
+
+        /* ── Buttons ─────────────────────────── */
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .15s, box-shadow .15s;
+            color: #fff;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+        .btn:active { transform: scale(.97); }
+        .btn-primary { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; }
+        .btn-secondary { background: rgba(255,255,255,0.12); }
+
+        /* ── Level Select ────────────────────── */
+        #level-screen { text-align: center; }
+        .level-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .level-btn {
+            padding: 18px 12px;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .level-btn:hover {
+            border-color: #ffd200;
+            background: rgba(255,215,0,0.1);
+        }
+        .level-btn span { display: block; font-size: .75rem; opacity: .6; margin-top: 4px; font-weight: 400; }
+
+        /* ── Game ─────────────────────────────── */
+        #game-screen { text-align: center; }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .game-header .label {
+            font-size: .85rem;
+            opacity: .7;
+        }
+        .game-header .score-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffd200;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c853, #ffd200, #ff1744);
+            border-radius: 3px;
+            transition: width .3s linear;
+            width: 100%;
+        }
+
+        .question-text {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .choice-btn {
+            padding: 16px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .choice-btn:hover {
+            border-color: #ffd200;
+            background: rgba(255,215,0,0.15);
+        }
+        .choice-btn.correct {
+            border-color: #00c853;
+            background: rgba(0,200,83,0.25);
+        }
+        .choice-btn.wrong {
+            border-color: #ff1744;
+            background: rgba(255,23,68,0.25);
+        }
+        .choice-btn:disabled { cursor: default; opacity: .7; }
+
+        /* ── Game Over ───────────────────────── */
+        #gameover-screen { text-align: center; }
+        .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ffd200;
+            margin: 10px 0;
+        }
+        .final-label { opacity: .6; font-size: 1.1rem; margin-bottom: 24px; }
+        .gameover-btns { display: flex; gap: 12px; justify-content: center; }
+
+        /* ── Leaderboard ─────────────────────── */
+        #leaderboard-screen { text-align: center; }
+        .lb-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 20px;
+        }
+        .lb-table th, .lb-table td {
+            padding: 10px 14px;
+            text-align: left;
+        }
+        .lb-table th {
+            font-size: .8rem;
+            text-transform: uppercase;
+            opacity: .5;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .lb-table td { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .lb-table tr:first-child td { color: #ffd200; font-weight: 700; }
+
+        .result-msg {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 10px 0 20px;
+            min-height: 30px;
+        }
+        .result-msg.correct-msg { color: #00c853; }
+        .result-msg.wrong-msg { color: #ff1744; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Math Game</h1>
+
+    <!-- LOGIN -->
+    <div id="login-screen" class="screen active">
+        <p style="margin-bottom:16px;opacity:.7">Enter your name to start</p>
+        <input id="username-input" type="text" placeholder="Your name" maxlength="20" autofocus>
+        <br>
+        <button class="btn btn-primary" onclick="enterGame()">Play</button>
+    </div>
+
+    <!-- LEVEL SELECT -->
+    <div id="level-screen" class="screen">
+        <p style="margin-bottom:16px;opacity:.7">Choose a level</p>
+        <div class="level-grid">
+            <button class="level-btn" onclick="startGame('school_easy')">
+                School - Easy<span>+1 pt | 15s</span>
+            </button>
+            <button class="level-btn" onclick="startGame('school_medium')">
+                School - Medium<span>+2 pts | 15s</span>
+            </button>
+            <button class="level-btn" onclick="startGame('uni_calculus')">
+                Calculus<span>+3 pts | 20s</span>
+            </button>
+            <button class="level-btn" onclick="startGame('uni_linalg')">
+                Linear Algebra<span>+3 pts | 20s</span>
+            </button>
+            <button class="level-btn" onclick="startGame('uni_discrete')">
+                Discrete Math<span>+3 pts | 20s</span>
+            </button>
+            <button class="level-btn" onclick="startGame('mixed')">
+                Mixed<span>+2 pts | 20s</span>
+            </button>
+        </div>
+        <button class="btn btn-secondary" onclick="showScreen('leaderboard-screen'); loadLeaderboard()">Leaderboard</button>
+    </div>
+
+    <!-- GAME -->
+    <div id="game-screen" class="screen">
+        <div class="game-header">
+            <span class="label" id="level-label"></span>
+            <span class="score-display" id="score-display">Score: 0</span>
+        </div>
+        <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+        <div class="question-text" id="question-text"></div>
+        <div class="choices" id="choices"></div>
+        <div class="result-msg" id="result-msg"></div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="gameover-screen" class="screen">
+        <p style="opacity:.6;font-size:1.1rem">Game Over</p>
+        <div class="final-score" id="final-score">0</div>
+        <div class="final-label">Total Score</div>
+        <div class="gameover-btns">
+            <button class="btn btn-primary" onclick="showScreen('level-screen')">Play Again</button>
+            <button class="btn btn-secondary" onclick="showScreen('leaderboard-screen'); loadLeaderboard()">Leaderboard</button>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboard-screen" class="screen">
+        <p style="opacity:.6;margin-bottom:8px">Leaderboard</p>
+        <table class="lb-table">
+            <thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead>
+            <tbody id="lb-body"></tbody>
+        </table>
+        <button class="btn btn-secondary" onclick="showScreen('level-screen')">Back</button>
+    </div>
+</div>
+
+<script>
+    let username = "";
+    let currentLevel = "";
+    let currentScore = 0;
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let timeLeft = 0;
+
+    const $ = id => document.getElementById(id);
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        $(id).classList.add('active');
+    }
+
+    function enterGame() {
+        const name = $('username-input').value.trim();
+        if (!name) { $('username-input').focus(); return; }
+        username = name;
+        currentScore = 0;
+        showScreen('level-screen');
+    }
+
+    $('username-input').addEventListener('keydown', e => { if (e.key === 'Enter') enterGame(); });
+
+    async function startGame(level) {
+        currentLevel = level;
+        showScreen('game-screen');
+        await loadQuestion();
+    }
+
+    async function loadQuestion() {
+        clearInterval(timerInterval);
+        $('result-msg').textContent = '';
+        $('result-msg').className = 'result-msg';
+
+        const res = await fetch('/api/question', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({level: currentLevel}),
+        });
+        const data = await res.json();
+
+        $('level-label').textContent = data.label;
+        $('score-display').textContent = 'Score: ' + currentScore;
+        $('question-text').textContent = data.question;
+
+        const choicesDiv = $('choices');
+        choicesDiv.innerHTML = '';
+        data.choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.textContent = c;
+            btn.onclick = () => submitAnswer(c, btn);
+            choicesDiv.appendChild(btn);
+        });
+
+        startTimer(data.timer);
+    }
+
+    function startTimer(seconds) {
+        timerSeconds = seconds;
+        timeLeft = seconds;
+        const fill = $('timer-fill');
+        fill.style.width = '100%';
+
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            const pct = Math.max(0, (timeLeft / timerSeconds) * 100);
+            fill.style.width = pct + '%';
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleTimeout();
+            }
+        }, 100);
+    }
+
+    async function handleTimeout() {
+        document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+        const res = await fetch('/api/answer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({answer: null, username}),
+        });
+        const data = await res.json();
+
+        $('result-msg').textContent = "Time's up! Answer: " + (data.answer ?? '');
+        $('result-msg').className = 'result-msg wrong-msg';
+
+        setTimeout(() => gameOver(data.score), 1500);
+    }
+
+    async function submitAnswer(chosen, btnEl) {
+        clearInterval(timerInterval);
+        document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+        const res = await fetch('/api/answer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({answer: chosen, username}),
+        });
+        const data = await res.json();
+
+        if (data.correct) {
+            btnEl.classList.add('correct');
+            currentScore = data.score;
+            $('score-display').textContent = 'Score: ' + currentScore;
+            $('result-msg').textContent = 'Correct! +' + data.points;
+            $('result-msg').className = 'result-msg correct-msg';
+            setTimeout(() => loadQuestion(), 1000);
+        } else {
+            btnEl.classList.add('wrong');
+            document.querySelectorAll('.choice-btn').forEach(b => {
+                if (parseInt(b.textContent) === data.answer) b.classList.add('correct');
+            });
+            $('result-msg').textContent = 'Wrong! Answer: ' + data.answer;
+            $('result-msg').className = 'result-msg wrong-msg';
+            setTimeout(() => gameOver(data.score), 1500);
+        }
+    }
+
+    function gameOver(score) {
+        clearInterval(timerInterval);
+        $('final-score').textContent = score;
+        showScreen('gameover-screen');
+    }
+
+    async function loadLeaderboard() {
+        const res = await fetch('/api/leaderboard');
+        const data = await res.json();
+        const tbody = $('lb-body');
+        tbody.innerHTML = '';
+        data.forEach((row, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${i+1}</td><td>${row.username}</td><td>${row.score}</td>`;
+            tbody.appendChild(tr);
+        });
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;opacity:.5">No scores yet</td></tr>';
+        }
+    }
+</script>
+</body>
+</html>
