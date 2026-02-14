@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .idea/
 .env
+math_game.db
+nul
